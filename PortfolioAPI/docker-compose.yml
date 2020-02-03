@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  portfolioapi:
+    image: ${DOCKER_REGISTRY-}portfolioapi
+    build:
+      context: .
+      dockerfile: Dockerfile

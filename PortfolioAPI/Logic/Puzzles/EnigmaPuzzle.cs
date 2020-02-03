@@ -53,7 +53,6 @@ namespace PortfolioAPI.Logic.Puzzles
             }
             return cipherText;
         }
-
         #endregion
 
         #region internal logic
@@ -102,7 +101,9 @@ namespace PortfolioAPI.Logic.Puzzles
                        "QMGYVPEDRCWTIANUXFKZOSLHJB", "QJINSAYDVKBFRUHMCPLEWZTGXO" };
 
             var chcode = (code(chr) + 26 + offset) % 26;
-      
+
+
+            var letterTest = key[r][chcode].ToString();
             var mapch = (code(key[r][chcode].ToString()) + 26 - offset) % 26 + 65;
 
             return ((char)mapch).ToString();

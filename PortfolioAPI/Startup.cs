@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.DynamoDBv2;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -18,6 +19,7 @@ using Ninject;
 using Ninject.Activation;
 using Ninject.Infrastructure.Disposal;
 using PortfolioAPI.Logic.Configuration;
+using PortfolioAPI.Logic.DB;
 using PortfolioAPI.Logic.DI.Interfaces;
 using PortfolioAPI.Logic.Extensions;
 using PortfolioAPI.Logic.Puzzles;
@@ -33,6 +35,8 @@ namespace PortfolioAPI
         private object Resolve(Type type) => Kernel.Get(type);
         private object RequestScope(IContext context) => scopeProvider.Value;
         private sealed class Scope : DisposableObject { }
+        readonly string MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
 
         public IConfiguration Configuration { get; }
 
@@ -47,14 +51,27 @@ namespace PortfolioAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+
+            /** MVC setup **/
             services.Configure<AppSettings>(Configuration.GetSection("AppSettings"));
+          
             services.AddControllers();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-
             services.AddRequestScopingMiddleware(() => scopeProvider.Value = new Scope());
             services.AddCustomControllerActivation(Resolve);
             services.AddCustomViewComponentActivation(Resolve);
 
+            /*CORS*/
+            services.AddCors(options =>
+            {
+                options.AddPolicy(MyAllowSpecificOrigins,
+                builder =>
+                {
+                    builder.WithOrigins("http://localhost:3000", "http://enigmaexample.com")
+                                        .AllowAnyHeader()
+                                        .AllowAnyMethod();
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -72,6 +89,7 @@ namespace PortfolioAPI
             app.UseRouting();
 
             app.UseAuthorization();
+            app.UseCors(MyAllowSpecificOrigins);
 
             app.UseEndpoints(endpoints =>
             {
@@ -90,16 +108,18 @@ namespace PortfolioAPI
                 kernel.Bind(ctrlType).ToSelf().InScope(RequestScope);
             }
 
-            // This is where our bindings are configurated
-            kernel.Bind<IPuzzle>().To<EnigmaPuzzle>().InScope(RequestScope);
 
             var appConfiguration = Configuration.GetSection("AppConfiguration").Get<AppSettings>();
 
             kernel.Bind(typeof(IOptions<AppSettings>)).To(typeof(AppConfigOption)).WithConstructorArgument(appConfiguration);
-
             // Cross-wire required framework services
             kernel.BindToMethod(app.GetRequestService<IViewBufferScope>);
 
+            // Dependency Injection binding - In a large project, this should really be it's own class. 
+            kernel.Bind<IPuzzle>().To<EnigmaPuzzle>().InScope(RequestScope);
+            kernel.Bind<INoSql>().To<DynamoLogic>().InScope(RequestScope);
+          
+           
             return kernel;
         }
     }

@@ -1,0 +1,16 @@
+version: '3.4'
+
+services:
+  portfolioapi:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=https://+:443;http://+:80
+      - AWS_REGION=us-east-1
+      - AWS_PROFILE=PortfolioDBUser
+    ports:
+      - "80"
+      - "443"
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+      - ${UserProfile}/.aws:${UserProfile}/.aws

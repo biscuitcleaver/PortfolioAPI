@@ -88,7 +88,7 @@ namespace PortfolioAPI.Controllers
                     break;
             }
 
-            response.ReturnMsg = StringUtilities.StringComparePercentange(compareTo, request.Answer);
+            response.ReturnMsg = StringUtilities.StringComparePercentange(compareTo.ToLower(), request.Answer.ToLower());
             if (compareTo.ToUpper() == request.Answer.ToUpper())
             {
                 response.IsCorrect = true;

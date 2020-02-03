@@ -35,7 +35,6 @@ namespace PortfolioAPITests
                 Round = 1,
                 Answer = "MAKE THE RAIN STOP"
             };
-
         }
 
         [Fact]
@@ -46,11 +45,9 @@ namespace PortfolioAPITests
             var controller = new PuzzleController(settingsMoq.Object, testPuzzle);
             var result = controller.Get(1);
 
-
             ActionResult testResult = (ActionResult)result.Result;
             OkObjectResult okObjectResult = Assert.IsType<OkObjectResult>(testResult);
             Assert.Equal("DDMW XJK TLUE ANCD", okObjectResult.Value);
-
         }  
         
         [Fact]
